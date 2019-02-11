@@ -64,7 +64,8 @@ const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
 };
 
 export const parseLine = (line: string) => {
-  line = line.trim();
+  line = line.split('#')[0].trim();
+
   if (!line) {
     return '';
   }
