@@ -36,4 +36,17 @@ describe.only('parser', () => {
   it('jz', () => {
     expect(parseLine('jz R9 8')).toEqual('6908');
   });
+
+  it('load', () => {
+    expect(parseLine('load R9 R8')).toEqual('A980');
+  });
+
+  it('readm', () => {
+    expect(parseLine('readm 80')).toEqual('7050');
+  });
+
+  it('comments', () => {
+    expect(parseLine('add R1 R1 R1#klsdfj')).toEqual(parseLine('add R1 R1 R1'));
+    expect(parseLine('# sdfklj')).toEqual(parseLine(''));
+  });
 });

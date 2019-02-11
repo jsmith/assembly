@@ -7,7 +7,7 @@ const INSTRUCTIONS = {
   sub: 'subt', // RF[rn] <= RF[rn] - RF[rm]
   jz: 'jz', // jz if R[rn] = 0
   halt: 'halt',
-  // readm: 'readm', // read memory
+  readm: 'readm', // read memory
   mul: 'mul', // RF[rn] <= RF[rn] * RF[rm]
   load: 'load',
   // addi: 'addi',
@@ -19,11 +19,16 @@ type PatternType<T> = { [key in keyof T]: [RegExp, (match: RegExpMatchArray) => 
 const RG = 'R([0-9])+';
 const SP = ' +';
 const NM = '([0-9]+)';
+const NUM = new RegExp(`^${NM}$`);
 const THREE = new RegExp(`^${RG}${SP}${RG}${SP}${RG}$`);
 const TWO = new RegExp(`^${RG}${SP}${RG}$`);
 const ONE_NUMBER = new RegExp(`^${RG}${SP}${NM}$`);
 const COMMAND = /^([0-9a-zA-Z]+)(.*?)$/;
 const EMPTY_STRING = /^$/;
+
+const NU = (match: RegExpMatchArray): ParseReturn => {
+  return [[match[1], 3]];
+};
 
 const ONE_NUM = (match: RegExpMatchArray): ParseReturn => {
   return [[match[1], 1], [match[2], 2]];
@@ -48,6 +53,7 @@ const PATTERNS: PatternType<typeof INSTRUCTIONS> = {
   halt: [EMPTY_STRING, () => []],
   mul: [THREE, THR],
   load: [TWO, TW],
+  readm: [NUM, NU],
 };
 
 const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
@@ -61,6 +67,7 @@ const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
   halt: 15,
   mul: 8,
   load: 10,
+  readm: 7,
 };
 
 export const parseLine = (line: string) => {
@@ -118,5 +125,5 @@ export const parseLine = (line: string) => {
 };
 
 export const parse = (text: string) => {
-  return text.split('\n').map(parseLine).join('\n');
+  return text.split('\n').map(parseLine).filter((line) => line).join('\n');
 };
