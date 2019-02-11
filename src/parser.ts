@@ -1,3 +1,9 @@
+export const REG: number[] = Array(2 ** 4).fill(0);
+export const MEM: number[] = Array(2 ** 8).fill(0);
+export const OUT: number[] = [];
+export const TIME = 0;
+let COUNTER = 0;
+
 const INSTRUCTIONS = {
   mov1: 'mov1', // RF[rn] <= mem[direct]
   mov2: 'mov2', // mem[direct] <= RF[rn]
@@ -14,7 +20,15 @@ const INSTRUCTIONS = {
 };
 
 type ParseReturn = Array<[string, number]>;
-type PatternType<T> = { [key in keyof T]: [RegExp, (match: RegExpMatchArray) => Array<[string, number]>] };
+type InstructionArgs = number[];
+type InstructionEval = (...args: InstructionArgs) => boolean | void;
+interface Instruction {
+  args: InstructionArgs;
+  evaluate: InstructionEval;
+}
+type PatternType<T> = {
+  [key in keyof T]: [RegExp, (match: RegExpMatchArray) => ParseReturn, InstructionEval]
+};
 
 const RG = 'R([0-9])+';
 const SP = ' +';
@@ -42,18 +56,64 @@ const THR = (match: RegExpMatchArray): ParseReturn => {
   return [[match[1], 1], [match[2], 1], [match[3], 1]];
 };
 
+const mov1 = (r1: number, direct: number) => {
+  REG[r1] = MEM[direct];
+};
+
+const mov2 = (r1: number, direct: number) => {
+  MEM[direct] = REG[r1];
+};
+
+const mov3 = (r1: number, r2: number) => {
+  MEM[REG[r1]] = REG[r2];
+};
+
+const mov4 = (r1: number, imm: number) => {
+  MEM[r1] = imm;
+};
+
+const add = (r1: number, r2: number, r3: number) => {
+  REG[r1] = REG[r2] + REG[r3];
+};
+
+const sub = (r1: number, r2: number, r3: number) => {
+  REG[r1] = REG[r2] - REG[r3];
+};
+
+const jz = (r1: number, imm: number) => {
+  if (REG[r1] !== 0) {
+    COUNTER = imm;
+  }
+};
+
+const halt = () => {
+  return true;
+};
+
+const mul = (r1: number, r2: number, r3: number) => {
+  REG[r1] = REG[r2] * REG[r3];
+};
+
+const load = (r1: number, r2: number) => {
+  REG[r1] = MEM[REG[r2]];
+};
+
+const readm = (imm: number) => {
+  OUT[TIME] = imm;
+};
+
 const PATTERNS: PatternType<typeof INSTRUCTIONS> = {
-  mov1: [ONE_NUMBER, ONE_NUM],
-  mov2: [ONE_NUMBER, ONE_NUM],
-  mov3: [TWO, TW],
-  mov4: [ONE_NUMBER, ONE_NUM],
-  add: [THREE, THR],
-  sub: [THREE, THR],
-  jz: [ONE_NUMBER, ONE_NUM],
-  halt: [EMPTY_STRING, () => []],
-  mul: [THREE, THR],
-  load: [TWO, TW],
-  readm: [NUM, NU],
+  mov1: [ONE_NUMBER, ONE_NUM, mov1],
+  mov2: [ONE_NUMBER, ONE_NUM, mov2],
+  mov3: [TWO, TW, mov3],
+  mov4: [ONE_NUMBER, ONE_NUM, mov4],
+  add: [THREE, THR, add],
+  sub: [THREE, THR, sub],
+  jz: [ONE_NUMBER, ONE_NUM, jz],
+  halt: [EMPTY_STRING, () => [], halt],
+  mul: [THREE, THR, mul],
+  load: [TWO, TW, load],
+  readm: [NUM, NU, readm],
 };
 
 const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
@@ -95,23 +155,29 @@ export const parseLine = (line: string) => {
   let hex = INSTRUCTION_NUMBERS[key].toString(16);
 
   const patterns = PATTERNS[key];
-  if (patterns !== null) {
-    const [reg, handler] = patterns;
-    match = line.match(reg);
 
-    if (match === null) {
-      throw Error(`Unable to parse arguments for "${instruction}": "${line}"`);
+  const [reg, convert, evaluate] = patterns;
+  match = line.match(reg);
+
+  if (match === null) {
+    throw Error(`Unable to parse arguments for "${instruction}": "${line}"`);
+  }
+
+  const result = convert(match).map(([value, length]) => [parseInt(value, 10), length]) as Array<[number, number]>;
+  const args = result.map(([value]) => value);
+
+  if (args.length !== evaluate.arguments.length) {
+    throw Error(`Error during evaluation. Invalid args length: ${args.length} vs ${evaluate.arguments.length}`);
+  }
+
+  result.forEach(([value, length]) => {
+    let num = value.toString(16);
+    while (num.length !== length) {
+      num = '0' + num;
     }
 
-    handler(match).forEach(([value, length]) => {
-      let num = parseInt(value, 10).toString(16);
-      while (num.length !== length) {
-        num = '0' + num;
-      }
-
-      hex += num;
-    });
-  }
+    hex += num;
+  });
 
   while (hex.length < 4) {
     hex += '0';
@@ -121,7 +187,7 @@ export const parseLine = (line: string) => {
     throw Error('Bad parser');
   }
 
-  return hex.toUpperCase();
+  return [hex.toUpperCase(), { evaluate, args }];
 };
 
 export const parse = (text: string) => {
