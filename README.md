@@ -1,26 +1,20 @@
-# converter
+# Jacob's Text Magic
+A simple assembly language. I built this for ECE3242 (Computer Architecture) where we often have to write and insert binary into memory manually.
+
+## Usage
+Visit the [website](https://jacobsmith.me/converter) and start typing. Use Ctrl+S to convert from assembly -> binary.
 
 ## Project setup
 ```
-npm install
-```
+# install the deps
+npm i
 
-### Compiles and hot-reloads for development
-```
+# run the dev server
 npm run serve
-```
 
-### Compiles and minifies for production
-```
+# build the project -> docs/
 npm run build
-```
 
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Run your unit tests
-```
+# run the tests
 npm run test:unit
 ```
