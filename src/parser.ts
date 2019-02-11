@@ -9,6 +9,7 @@ const INSTRUCTIONS = {
   halt: 'halt',
   // readm: 'readm', // read memory
   mul: 'mul', // RF[rn] <= RF[rn] * RF[rm]
+  load: 'load',
   // addi: 'addi',
 };
 
@@ -46,6 +47,7 @@ const PATTERNS: PatternType<typeof INSTRUCTIONS> = {
   jz: [ONE_NUMBER, ONE_NUM],
   halt: [EMPTY_STRING, () => []],
   mul: [THREE, THR],
+  load: [TWO, TW],
 };
 
 const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
@@ -58,6 +60,7 @@ const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
   jz: 6,
   halt: 15,
   mul: 8,
+  load: 10,
 };
 
 export const parseLine = (line: string) => {
