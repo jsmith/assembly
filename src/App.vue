@@ -1,28 +1,42 @@
 <template>
-  <div id="app" style="display: flex; flex-direction: column">
-    <div class="banner">JACOBS TEXT MAGIC</div>
-    <div class="row grow">
-      <div class="relative grow col">
-        <textarea class="input text" v-model="input" ref="input"></textarea>
-      </div>
-      <div class="output text grow col">{{ output }}</div>
-    </div>
-  </div>
+  <v-app>
+    <v-toolbar app>
+      <v-toolbar-title class="headline text-uppercase">
+        <span>Vuetify</span>
+        <span class="font-weight-light">MATERIAL DESIGN</span>
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn
+        flat
+        href="https://github.com/vuetifyjs/vuetify/releases/latest"
+        target="_blank"
+      >
+        <span class="mr-2">Latest Release</span>
+      </v-btn>
+    </v-toolbar>
+
+    <v-content>
+      <HelloWorld/>
+    </v-content>
+  </v-app>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator';
-import { parse } from '@/parser';
+<script>
+import HelloWorld from './components/HelloWorld'
 
-@Component
-export default class App extends Vue {
-  public input = '';
-  public output = '';
-
-  public mounted() {
-    window.addEventListener('keydown', this.parse);
-
-    const input = this.$refs.input as HTMLElement;
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  },
+  data () {
+    return {
+      //
+    }
+  }
+}
+</script>
+his.$refs.input as HTMLElement;
     input.focus();
   }
 
@@ -36,7 +50,7 @@ export default class App extends Vue {
     event.preventDefault();
 
     try {
-      this.output = parse(this.input);
+      this.output = parse(this.input).map(({ hex }) => hex).join('\n');
     } catch (e) {
       this.output = e.message;
     }
@@ -113,11 +127,6 @@ body
 
 .grow
   flex: 1
-
-.text
-  border-radius: 10px
-  border: none
-  padding: 5px
 
 .col
   margin: 10px

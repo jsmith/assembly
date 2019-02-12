@@ -2,7 +2,7 @@ export const REG: number[] = Array(2 ** 4).fill(0);
 export const MEM: number[] = Array(2 ** 8).fill(0);
 export const OUT: number[] = [];
 export const TIME = 0;
-let COUNTER = 0;
+export let COUNTER = 0;
 
 const INSTRUCTIONS = {
   mov1: 'mov1', // RF[rn] <= mem[direct]
@@ -19,41 +19,36 @@ const INSTRUCTIONS = {
   // addi: 'addi',
 };
 
-type ParseReturn = Array<[string, number]>;
 type InstructionArgs = number[];
 type InstructionEval = (...args: InstructionArgs) => boolean | void;
-interface Instruction {
+export interface Instruction {
   args: InstructionArgs;
   evaluate: InstructionEval;
+  hex: string;
 }
-type PatternType<T> = {
-  [key in keyof T]: [RegExp, (match: RegExpMatchArray) => ParseReturn, InstructionEval]
-};
 
-const RG = 'R([0-9])+';
-const SP = ' +';
-const NM = '([0-9]+)';
-const NUM = new RegExp(`^${NM}$`);
-const THREE = new RegExp(`^${RG}${SP}${RG}${SP}${RG}$`);
-const TWO = new RegExp(`^${RG}${SP}${RG}$`);
-const ONE_NUMBER = new RegExp(`^${RG}${SP}${NM}$`);
+interface ParsingData {
+  registers?: number;
+  immediate?: boolean;
+}
+
 const COMMAND = /^([0-9a-zA-Z]+)(.*?)$/;
-const EMPTY_STRING = /^$/;
 
-const NU = (match: RegExpMatchArray): ParseReturn => {
-  return [[match[1], 3]];
+const range = (n: number): number[] => {
+  return [...Array(n).keys()];
 };
 
-const ONE_NUM = (match: RegExpMatchArray): ParseReturn => {
-  return [[match[1], 1], [match[2], 2]];
-};
+const makeRegex = (data: ParsingData) => {
+  const regex: string[] = [];
+  range(data.registers || 0).forEach(() => {
+    regex.push('R([0-9]+)');
+  });
 
-const TW = (match: RegExpMatchArray): ParseReturn => {
-  return [[match[1], 1], [match[2], 1]];
-};
+  if (data.immediate) {
+    regex.push('([0-9]+)');
+  }
 
-const THR = (match: RegExpMatchArray): ParseReturn => {
-  return [[match[1], 1], [match[2], 1], [match[3], 1]];
+  return new RegExp(`^${regex.join(' +')}$`);
 };
 
 const mov1 = (r1: number, direct: number) => {
@@ -102,18 +97,18 @@ const readm = (imm: number) => {
   OUT[TIME] = imm;
 };
 
-const PATTERNS: PatternType<typeof INSTRUCTIONS> = {
-  mov1: [ONE_NUMBER, ONE_NUM, mov1],
-  mov2: [ONE_NUMBER, ONE_NUM, mov2],
-  mov3: [TWO, TW, mov3],
-  mov4: [ONE_NUMBER, ONE_NUM, mov4],
-  add: [THREE, THR, add],
-  sub: [THREE, THR, sub],
-  jz: [ONE_NUMBER, ONE_NUM, jz],
-  halt: [EMPTY_STRING, () => [], halt],
-  mul: [THREE, THR, mul],
-  load: [TWO, TW, load],
-  readm: [NUM, NU, readm],
+const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionEval] } = {
+  mov1: [{ registers: 1, immediate: true }, mov1],
+  mov2: [{ registers: 1, immediate: true }, mov2],
+  mov3: [{ registers: 2 }, mov3],
+  mov4: [{ registers: 1, immediate: true }, mov4],
+  add: [{ registers: 3 }, add],
+  sub: [{ registers: 3 }, sub],
+  jz: [{ registers: 1, immediate: true }, jz],
+  halt: [{}, halt],
+  mul: [{ registers: 3 }, mul],
+  load: [{ registers: 2 }, load],
+  readm: [{ immediate: true }, readm],
 };
 
 const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
@@ -130,17 +125,38 @@ const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
   readm: 7,
 };
 
-export const parseLine = (line: string) => {
+const toHex = (decimal: number, length: number) => {
+  if (decimal >= 16 ** length) {
+    throw Error(`Unable to convert ${decimal} to HEX as it is too big`);
+  }
+
+  let hex = decimal.toString(16);
+  while (hex.length < length) {
+    hex = '0' + hex;
+  }
+
+  return hex;
+};
+
+/**
+ * Parse the instruction. An error will be thrown for any detected errors in the line.
+ *
+ * @param line The line of text to parse.
+ * @returns The parsed instruction or null if the line is empty.
+ */
+export const parseLine = (line: string): Instruction | null => {
+  // Ignore comments and trip all whitespace
+  // Make sure to trim after splitting
   line = line.split('#')[0].trim();
 
   if (!line) {
-    return '';
+    return null;
   }
 
   let match = line.match(COMMAND);
 
   if (!match) {
-    throw Error('Unable to parse line');
+    throw Error(`Unable to parse instruction name for line: ${line}`);
   }
 
   const instruction = match[1];
@@ -150,46 +166,55 @@ export const parseLine = (line: string) => {
     throw Error(`Unknown instruction: ${instruction}`);
   }
 
-  // Grab the key and cast
+  // Grab the key and cast since TS isn't that smart
   const key = instruction as keyof typeof PATTERNS;
-  let hex = INSTRUCTION_NUMBERS[key].toString(16);
+  const instructionNumber = INSTRUCTION_NUMBERS[key];
+  if (instructionNumber > 15) {
+    throw Error(`Invalid instruction number: ${instructionNumber}`);
+  }
+
+  // shift to most significant
+  let decimal = INSTRUCTION_NUMBERS[key] << 12;
 
   const patterns = PATTERNS[key];
 
-  const [reg, convert, evaluate] = patterns;
+  const [parsingData, evaluate] = patterns;
+  const { registers = 0, immediate = false } = parsingData;
+  const reg = makeRegex(parsingData);
+
   match = line.match(reg);
 
   if (match === null) {
     throw Error(`Unable to parse arguments for "${instruction}": "${line}"`);
   }
 
-  const result = convert(match).map(([value, length]) => [parseInt(value, 10), length]) as Array<[number, number]>;
-  const args = result.map(([value]) => value);
-
-  if (args.length !== evaluate.arguments.length) {
-    throw Error(`Error during evaluation. Invalid args length: ${args.length} vs ${evaluate.arguments.length}`);
+  const numbers = match.slice(1).map((value) => parseInt(value, 10));
+  for (const i of range(registers)) {
+    // Each register is 1 Byte (that's why we use 16)
+    // We want the ->
+    // 1st register to go in the second Byte (second MSB)
+    // 2nd register to go in the third Byte (second LSB)
+    // 3rd register to go in the fourth Byte (LSB)
+    decimal += numbers[i] << (4 * (2 - i));
   }
 
-  result.forEach(([value, length]) => {
-    let num = value.toString(16);
-    while (num.length !== length) {
-      num = '0' + num;
-    }
-
-    hex += num;
-  });
-
-  while (hex.length < 4) {
-    hex += '0';
+  if (immediate) {
+    decimal += numbers[numbers.length - 1];
   }
 
-  if (hex.length > 4) {
-    throw Error('Bad parser');
-  }
+  // const result = convert().map(([value, length]) => [parseInt(value, 10), length]) as Array<[number, number]>;
+  // if (args.length !== evaluate.arguments.length) {
+  //   throw Error(`Error during evaluation. Invalid args length: ${args.length} vs ${evaluate.arguments.length}`);
+  // }
 
-  return [hex.toUpperCase(), { evaluate, args }];
+  const hex = toHex(decimal, 4).toUpperCase();
+  return {
+    evaluate,
+    args: numbers,
+    hex,
+  };
 };
 
 export const parse = (text: string) => {
-  return text.split('\n').map(parseLine).filter((line) => line).join('\n');
+  return text.split('\n').map(parseLine).filter((line) => line) as Instruction[];
 };
