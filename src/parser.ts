@@ -10,7 +10,7 @@ const INSTRUCTIONS = {
   mov3: 'mov3', // mem[RF[rn]] <= RF[rm]
   mov4: 'mov4', // RF[rn] <= imm
   add: 'add', // RF[rn] <= RF[rn] + RF[rm]
-  sub: 'subt', // RF[rn] <= RF[rn] - RF[rm]
+  subt: 'subt', // RF[rn] <= RF[rn] - RF[rm]
   jz: 'jz', // jz if R[rn] = 0
   halt: 'halt',
   readm: 'readm', // read memory
@@ -71,7 +71,7 @@ const add = (r1: number, r2: number, r3: number) => {
   REG[r1] = REG[r2] + REG[r3];
 };
 
-const sub = (r1: number, r2: number, r3: number) => {
+const subt = (r1: number, r2: number, r3: number) => {
   REG[r1] = REG[r2] - REG[r3];
 };
 
@@ -103,7 +103,7 @@ const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionE
   mov3: [{ registers: 2 }, mov3],
   mov4: [{ registers: 1, immediate: true }, mov4],
   add: [{ registers: 3 }, add],
-  sub: [{ registers: 3 }, sub],
+  subt: [{ registers: 3 }, subt],
   jz: [{ registers: 1, immediate: true }, jz],
   halt: [{}, halt],
   mul: [{ registers: 3 }, mul],
@@ -117,7 +117,7 @@ const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
   mov3: 2,
   mov4: 3,
   add: 4,
-  sub: 5,
+  subt: 5,
   jz: 6,
   halt: 15,
   mul: 8,

@@ -13,8 +13,8 @@ describe('parser', () => {
     ex(parseLine('add R1 R1 R2')).toEqual('4112');
   });
 
-  it('sub', () => {
-    ex(parseLine('sub R1 R1 R2')).toEqual('5112');
+  it('subt', () => {
+    ex(parseLine('subt R1 R1 R2')).toEqual('5112');
   });
 
   it('mul', () => {
