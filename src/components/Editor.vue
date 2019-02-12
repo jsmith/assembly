@@ -7,6 +7,9 @@
       @input="input"
       @keydown="keydown"
       v-bind="$attrs"
+      no-resize
+      :append-icon="copy ? 'file_copy' : undefined"
+      @click:append="appendCb"
     ></v-textarea>
   </div>
 </template>
@@ -17,6 +20,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 @Component
 export default class Editor extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
+  @Prop(Boolean) public copy!: boolean;
 
   public input(text: string) {
     this.$emit('input', text);
@@ -26,6 +30,12 @@ export default class Editor extends Vue {
     if (e.which === 9) {
       e.preventDefault();
       this.$emit('input', this.value + '    ');
+    }
+  }
+
+  public appendCb(e: MouseEvent) {
+    if (this.copy) {
+      this.$emit('copy', e);
     }
   }
 }
