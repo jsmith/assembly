@@ -2,7 +2,7 @@
 A simple assembly language. I built this for ECE3242 (Computer Architecture) where we often have to write and insert binary into memory manually. By creating this program, I was able to write the program in assembly and compile to the expected binary format.
 
 ## Usage
-Visit the [website](https://jacobsmith.me/converter) and start typing. Use `Ctrl+S` to convert from assembly -> binary.
+Visit the [website](https://jacobsmith.me/assembly) and start typing. Use `Ctrl+S` to convert from assembly -> binary.
 
 ## Instruction Set
 The following instruction sections include the specific format that each format expects and a technical description.
