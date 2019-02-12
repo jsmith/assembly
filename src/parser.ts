@@ -38,6 +38,9 @@ const range = (n: number): number[] => {
   return [...Array(n).keys()];
 };
 
+const VAR = '([a-zA-Z0-9_]+)';
+const DEFINE  = `^#define +${VAR} +${VAR}$`;
+
 const makeRegex = (data: ParsingData) => {
   const regex: string[] = [];
   range(data.registers || 0).forEach(() => {
@@ -138,6 +141,8 @@ const toHex = (decimal: number, length: number) => {
   return hex;
 };
 
+const VARIABLES: { [name: string]: string } = {};
+
 /**
  * Parse the instruction. An error will be thrown for any detected errors in the line.
  *
@@ -147,10 +152,21 @@ const toHex = (decimal: number, length: number) => {
 export const parseLine = (line: string): Instruction | null => {
   // Ignore comments and trip all whitespace
   // Make sure to trim after splitting
-  line = line.split('#')[0].trim();
+  line = line.trim();
 
+  const defineMatch = line.match(DEFINE);
+  if (defineMatch) {
+    VARIABLES[defineMatch[1]] = defineMatch[2];
+    return null;
+  }
+
+  line = line.split('#')[0].trim();
   if (!line) {
     return null;
+  }
+
+  for (const k of Object.keys(VARIABLES)) {
+    line = line.split(k).join(VARIABLES[k]);
   }
 
   let match = line.match(COMMAND);

@@ -1,43 +1,39 @@
 <template>
   <v-app>
-    <v-toolbar app>
-      <v-toolbar-title class="headline text-uppercase">
-        <span>Vuetify</span>
-        <span class="font-weight-light">MATERIAL DESIGN</span>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn
-        flat
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-      >
-        <span class="mr-2">Latest Release</span>
-      </v-btn>
-    </v-toolbar>
-
     <v-content>
-      <HelloWorld/>
+      <div id="app" style="display: flex; flex-direction: column">
+        <div class="banner">JACOBS TEXT MAGIC</div>
+        <div class="row grow">
+          <editor 
+            class="input grow col" 
+            v-model="input"
+            outline
+            autofocus
+          ></editor>
+          <editor 
+            class="output grow col" 
+            outline
+            :value="output"
+            readonly
+          ></editor>
+        </div>
+      </div>
     </v-content>
   </v-app>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld'
+<script lang="ts">
+import { Component, Vue, Watch } from 'vue-property-decorator';
+import { parse } from '@/parser';
+import Editor from '@/components/Editor.vue';
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  },
-  data () {
-    return {
-      //
-    }
-  }
-}
-</script>
-his.$refs.input as HTMLElement;
-    input.focus();
+@Component({ components: { Editor } })
+export default class App extends Vue {
+  public input = '';
+  public output = '';
+
+  public mounted() {
+    window.addEventListener('keydown', this.parse);
   }
 
   public destroyed() {
@@ -59,6 +55,9 @@ his.$refs.input as HTMLElement;
 </script>
 
 <style lang="sass">
+*
+  font-family: monospace
+  
 body
   margin: 0
 
@@ -70,17 +69,6 @@ body
   color: #2c3e50
   background: #eaf1ff
   height: 100vh
-
-.relative
-  position: relative
-
-// Use absolute so the textarea doesn't jump
-// https://stackoverflow.com/questions/15475010/text-area-in-html-jumps-on-focus
-.input
-  top: 0
-  bottom: 0
-  width: 100%
-  position: absolute
 
 .output
   background: #fff
@@ -100,27 +88,6 @@ body
   color: #FFFFFF
   background: #005DFF
   text-shadow: -5px 5px 0px #00e6e6, -10px 10px 0px #01cccc, -15px 15px 0px #00bdbd
-
-.button
-	box-shadow:inset 0px 1px 0px 0px #ffffff
-	background-color: #005dff
-	border-radius: 6px
-	text-indent: 0
-	border: 1px solid #dcdcdc
-	display: inline-block
-	color: #EEE
-	font-family: arial
-	font-size: 15px
-	font-weight: bold
-	height: 50px
-	line-height: 50px
-	width: 100px
-	text-decoration: none
-	text-align: center
-
-.button:hover
-  cursor: pointer
-  background-color: #dfdfdf
 
 .row
   display: flex
