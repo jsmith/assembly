@@ -1,29 +1,39 @@
 <template>
-  <div id="app" style="display: flex; flex-direction: column">
-    <div class="banner">JACOBS TEXT MAGIC</div>
-    <div class="row grow">
-      <div class="relative grow col">
-        <textarea class="input text" v-model="input" ref="input"></textarea>
+  <v-app>
+    <v-content>
+      <div id="app" style="display: flex; flex-direction: column">
+        <div class="banner">JACOBS TEXT MAGIC</div>
+        <div class="row grow">
+          <editor 
+            class="input grow col" 
+            v-model="input"
+            outline
+            autofocus
+          ></editor>
+          <editor 
+            class="output grow col" 
+            outline
+            :value="output"
+            readonly
+          ></editor>
+        </div>
       </div>
-      <div class="output text grow col">{{ output }}</div>
-    </div>
-  </div>
+    </v-content>
+  </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { parse } from '@/parser';
+import Editor from '@/components/Editor.vue';
 
-@Component
+@Component({ components: { Editor } })
 export default class App extends Vue {
   public input = '';
   public output = '';
 
   public mounted() {
     window.addEventListener('keydown', this.parse);
-
-    const input = this.$refs.input as HTMLElement;
-    input.focus();
   }
 
   public destroyed() {
@@ -36,7 +46,7 @@ export default class App extends Vue {
     event.preventDefault();
 
     try {
-      this.output = parse(this.input);
+      this.output = parse(this.input).map(({ hex }) => hex).join('\n');
     } catch (e) {
       this.output = e.message;
     }
@@ -45,6 +55,9 @@ export default class App extends Vue {
 </script>
 
 <style lang="sass">
+*
+  font-family: monospace
+  
 body
   margin: 0
 
@@ -56,17 +69,6 @@ body
   color: #2c3e50
   background: #eaf1ff
   height: 100vh
-
-.relative
-  position: relative
-
-// Use absolute so the textarea doesn't jump
-// https://stackoverflow.com/questions/15475010/text-area-in-html-jumps-on-focus
-.input
-  top: 0
-  bottom: 0
-  width: 100%
-  position: absolute
 
 .output
   background: #fff
@@ -87,37 +89,11 @@ body
   background: #005DFF
   text-shadow: -5px 5px 0px #00e6e6, -10px 10px 0px #01cccc, -15px 15px 0px #00bdbd
 
-.button
-	box-shadow:inset 0px 1px 0px 0px #ffffff
-	background-color: #005dff
-	border-radius: 6px
-	text-indent: 0
-	border: 1px solid #dcdcdc
-	display: inline-block
-	color: #EEE
-	font-family: arial
-	font-size: 15px
-	font-weight: bold
-	height: 50px
-	line-height: 50px
-	width: 100px
-	text-decoration: none
-	text-align: center
-
-.button:hover
-  cursor: pointer
-  background-color: #dfdfdf
-
 .row
   display: flex
 
 .grow
   flex: 1
-
-.text
-  border-radius: 10px
-  border: none
-  padding: 5px
 
 .col
   margin: 10px
