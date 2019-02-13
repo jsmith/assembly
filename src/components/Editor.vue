@@ -21,6 +21,9 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 export default class Editor extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
   @Prop(Boolean) public copy!: boolean;
+
+  // USE this https://codepen.io/lonekorean/pen/gaLEMR
+  // We need to improve our solution ^^^
   @Prop({ type: Number, required: false }) public highlightLine?: number;
 
   public mounted() {

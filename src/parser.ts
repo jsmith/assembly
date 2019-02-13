@@ -1,8 +1,19 @@
-export const REG: number[] = Array(2 ** 4).fill(0);
-export const MEM: number[] = Array(2 ** 8).fill(0);
-export const OUT: number[] = [];
-export let TIME = 0;
-export let COUNTER = 0;
+export interface ProgramData {
+  registers: number[];
+  memory: number[];
+  counter: number;
+  time: number;
+  out: number[];
+}
+
+const reset = () => ({
+  registers: Array(2 ** 4).fill(0),
+  memory: Array(2 ** 8).fill(0),
+  counter: 0,
+  time: 0,
+  out: [],
+});
+export let programData: ProgramData = reset();
 
 const INSTRUCTIONS = {
   mov1: 'mov1', // RF[rn] <= mem[direct]
@@ -56,32 +67,32 @@ const makeRegex = (data: ParsingData) => {
 };
 
 const mov1 = (r1: number, direct: number) => {
-  REG[r1] = MEM[direct];
+  programData.registers[r1] = programData.memory[direct];
 };
 
 const mov2 = (r1: number, direct: number) => {
-  MEM[direct] = REG[r1];
+  programData.memory[direct] = programData.registers[r1];
 };
 
 const mov3 = (r1: number, r2: number) => {
-  MEM[REG[r1]] = REG[r2];
+  programData.memory[programData.registers[r1]] = programData.registers[r2];
 };
 
 const mov4 = (r1: number, imm: number) => {
-  REG[r1] = imm;
+  programData.registers[r1] = imm;
 };
 
 const add = (r1: number, r2: number, r3: number) => {
-  REG[r1] = REG[r2] + REG[r3];
+  programData.registers[r1] = programData.registers[r2] + programData.registers[r3];
 };
 
 const subt = (r1: number, r2: number, r3: number) => {
-  REG[r1] = REG[r2] - REG[r3];
+  programData.registers[r1] = programData.registers[r2] - programData.registers[r3];
 };
 
 const jz = (r1: number, imm: number) => {
-  if (REG[r1] !== 0) {
-    COUNTER = imm;
+  if (programData.registers[r1] !== 0) {
+    programData.counter = imm;
   }
 };
 
@@ -90,15 +101,15 @@ const halt = () => {
 };
 
 const mul = (r1: number, r2: number, r3: number) => {
-  REG[r1] = REG[r2] * REG[r3];
+  programData.registers[r1] = programData.registers[r2] * programData.registers[r3];
 };
 
 const load = (r1: number, r2: number) => {
-  REG[r1] = MEM[REG[r2]];
+  programData.registers[r1] = programData.memory[programData.registers[r2]];
 };
 
 const readm = (imm: number) => {
-  OUT[TIME] = imm;
+  programData.out[programData.time] = imm;
 };
 
 const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionEval] } = {
@@ -253,24 +264,26 @@ export const parse = (text: string) => {
 };
 
 export function* debug(instructions: Instruction[]) {
-  COUNTER = 0;
+  // RESET the attributes or programData
+  Object.assign(programData, reset());
+
   while (true) {
-    if (COUNTER >= instructions.length) {
+    yield;
+
+    if (programData.counter >= instructions.length) {
       break;
     }
 
 
-    const instruction = instructions[COUNTER];
+    const instruction = instructions[programData.counter];
+    programData.time++;
+    programData.counter++;
 
     const { evaluate, args } = instruction;
-    COUNTER++;
 
     const done = evaluate(...args);
     if (done) {
       break;
     }
-
-    yield;
-    TIME++;
   }
 }

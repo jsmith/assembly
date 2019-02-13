@@ -15,15 +15,22 @@
         <editor
           class="output" 
           outline
-          :style="{ height: `${topPercent}%` }"
+          :style="editorStyle"
           :value="output"
           readonly
         ></editor>
+        <div class="dragger-wrapper">
+          <drag-element
+            class="dragger"
+            cursor="ns-resize"
+            @move="resizeRightSide"
+          ></drag-element>
+        </div>
         <debugger
           :program="program"
-          :line-number.sync="lineNumber"
-          :style="{ height: `${100 - topPercent}%` }"
+          :style="debugStyle"
           :debugging.sync="debugging"
+          @compile="parse"
           @debug="debug"
         ></debugger>
       </div>
@@ -37,23 +44,35 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Editor from '@/components/Editor.vue';
 import Debugger from '@/components/Debugger.vue';
-import { parse, debug, SourceMap } from '@/parser';
+import { parse, debug, SourceMap, programData } from '@/parser';
+import { DragElement } from '@/draggable';
 
-@Component({ components: { Editor, Debugger } })
+@Component({ components: { Editor, Debugger, DragElement } })
 export default class Main extends Vue {
   public input = '';
   public output = '';
   public show = false;
-  public topPercent = 50;
+  public offset = 0;
 
-  public lineNumber = 0;
   public debugging = false;
   public program: Generator | null = null;
   public sourceMap: SourceMap | null = null;
 
+  get editorStyle() {
+    return {
+      height: `calc(50% + ${this.offset}px)`,
+    };
+  }
+
+  get debugStyle() {
+    return {
+      height: `calc(50% - ${this.offset}px)`,
+    };
+  }
+
   get highlightLine() {
     if (this.debugging && this.sourceMap) {
-      return this.sourceMap[this.lineNumber];
+      return this.sourceMap[programData.counter];
     }
   }
 
@@ -89,7 +108,7 @@ export default class Main extends Vue {
     }
   }
 
-public debug() {
+  public debug() {
     const instructions = this.parse();
     if (!instructions) {
       return;
@@ -118,6 +137,10 @@ public debug() {
     document.body.removeChild(el);
 
     this.show = true;
+  }
+
+  public resizeRightSide(e: MouseEvent) {
+    this.offset += e.movementY;
   }
 }
 </script>
@@ -153,4 +176,12 @@ public debug() {
   display: flex
   flex-direction: column
   margin: 10px
+
+.dragger-wrapper
+  position: relative
+
+.dragger
+  position: absolute
+  height: 10px
+  width: 100%
 </style>
