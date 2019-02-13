@@ -15,8 +15,8 @@
         :highlight-line="highlightLine"
         outline
         autofocus
-        copy
-        @copy="copyUrl"
+        share
+        @share="copyUrl"
       ></editor>
       <div class="col grow">
         <editor

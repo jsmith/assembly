@@ -18,8 +18,8 @@ export let programData: ProgramData = reset();
 const INSTRUCTIONS = {
   mov1: 'mov1', // RF[rn] <= mem[direct]
   mov2: 'mov2', // mem[direct] <= RF[rn]
-  mov3: 'mov3', // mem[RF[rn]] <= RF[rm]
-  mov4: 'mov4', // RF[rn] <= imm
+  save: 'mov3', // mem[RF[rn]] <= RF[rm]
+  set: 'mov4', // RF[rn] <= imm
   add: 'add', // RF[rn] <= RF[rn] + RF[rm]
   subt: 'subt', // RF[rn] <= RF[rn] - RF[rm]
   jz: 'jz', // jz if R[rn] = 0
@@ -74,11 +74,11 @@ const mov2 = (r1: number, direct: number) => {
   programData.memory[direct] = programData.registers[r1];
 };
 
-const mov3 = (r1: number, r2: number) => {
+const save = (r1: number, r2: number) => {
   programData.memory[programData.registers[r1]] = programData.registers[r2];
 };
 
-const mov4 = (r1: number, imm: number) => {
+const set = (r1: number, imm: number) => {
   programData.registers[r1] = imm;
 };
 
@@ -115,8 +115,8 @@ const readm = (imm: number) => {
 const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionEval] } = {
   mov1: [{ registers: 1, immediate: true }, mov1],
   mov2: [{ registers: 1, immediate: true }, mov2],
-  mov3: [{ registers: 2 }, mov3],
-  mov4: [{ registers: 1, immediate: true }, mov4],
+  save: [{ registers: 2 }, save],
+  set: [{ registers: 1, immediate: true }, set],
   add: [{ registers: 3 }, add],
   subt: [{ registers: 3 }, subt],
   jz: [{ registers: 1, immediate: true }, jz],
@@ -129,8 +129,8 @@ const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionE
 const INSTRUCTION_NUMBERS: { [key in keyof typeof INSTRUCTIONS]: number } = {
   mov1: 0,
   mov2: 1,
-  mov3: 2,
-  mov4: 3,
+  save: 2,
+  set: 3,
   add: 4,
   subt: 5,
   jz: 6,
@@ -153,7 +153,8 @@ const toHex = (decimal: number, length: number) => {
   return hex;
 };
 
-const VARIABLES: { [name: string]: string } = {};
+
+interface Variables { [name: string]: string; }
 
 /**
  * Parse the instruction. An error will be thrown for any detected errors in the line.
@@ -161,13 +162,13 @@ const VARIABLES: { [name: string]: string } = {};
  * @param line The line of text to parse.
  * @returns The parsed instruction or null if the line is empty.
  */
-export const parseLine = (line: string): Instruction | null => {
+export const parseLine = (line: string, variables: Variables = {}): Instruction | null => {
   line = line.trim();
 
   // Check for a #define statement first
   const defineMatch = line.match(DEFINE);
   if (defineMatch) {
-    VARIABLES[defineMatch[1]] = defineMatch[2];
+    variables[defineMatch[1]] = defineMatch[2];
     return null;
   }
 
@@ -178,9 +179,9 @@ export const parseLine = (line: string): Instruction | null => {
     return null;
   }
 
-  for (const k of Object.keys(VARIABLES)) {
-    // Replace all instances of k with VARIABLES[k]
-    line = line.split(k).join(VARIABLES[k]);
+  for (const k of Object.keys(variables)) {
+    // FYI \\b matches word boundary (but doesn't actually match any characters)
+    line = line.replace(new RegExp(`\\b${k}\\b`, 'g'), variables[k]);
   }
 
   let match = line.match(COMMAND);
@@ -250,7 +251,9 @@ export const parseLine = (line: string): Instruction | null => {
 export const parse = (text: string) => {
   const instructions: Instruction[] = [];
   const sourceMap: SourceMap = {};
-  text.split('\n').map(parseLine).forEach((line, i) => {
+  const variables = {};
+
+  text.split('\n').map((line) => parseLine(line, variables)).forEach((line, i) => {
     if (line) {
       sourceMap[instructions.length] = i;
       instructions.push(line);

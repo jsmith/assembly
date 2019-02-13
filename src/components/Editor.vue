@@ -8,7 +8,7 @@
       @keydown="keydown"
       v-bind="$attrs"
       no-resize
-      :append-icon="copy ? 'file_copy' : undefined"
+      :append-icon="share ? 'share' : undefined"
       @click:append="appendCb"
     ></v-textarea>
   </div>
@@ -20,7 +20,7 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 @Component
 export default class Editor extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
-  @Prop(Boolean) public copy!: boolean;
+  @Prop(Boolean) public share!: boolean;
 
   // USE this https://codepen.io/lonekorean/pen/gaLEMR
   // We need to improve our solution ^^^
@@ -42,8 +42,8 @@ export default class Editor extends Vue {
   }
 
   public appendCb(e: MouseEvent) {
-    if (this.copy) {
-      this.$emit('copy', e);
+    if (this.share) {
+      this.$emit('share', e);
     }
   }
 

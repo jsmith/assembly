@@ -1,8 +1,13 @@
 # Jacob's Text Magic
-A simple assembly language. I built this for ECE3242 (Computer Architecture) where we often have to write and insert binary into memory manually. By creating this program, I was able to write the program in assembly and compile to the expected binary format.
+A simple assembly language built for ECE3242 (Computer Architecture). We often had to write and insert binary into memory manually (see [here](https://github.com/jsmith/set-associative-cache/commit/880d9868ce18cff4e11e5c2b4c03660739c4faa4#diff-6be5ac8b4479b3a22d07d63bb0338fe9)). Furthermore, compilation and simulation took upwards of 10 minutes. By creating this program, I was able to write the program in assembly, simulate the behavior using the builtin emulator, and compile the program to the expected binary format.
 
 ## Usage
 Visit the [website](https://jacobsmith.me/assembly) and start typing. Use `Ctrl+S` to convert from assembly -> binary.
+
+## Examples
+#### Looping
+Here is a simple for loop that counts down from 10 to 1 and stop looping at 0 ([link](https://jacobsmith.me/assembly/#/?text=%23define%20ONE%20R0%0A%23define%20COUNT%20R1%0Aset%20ONE%201%0Aset%20COUNT%2010%0A%0Asave%20COUNT%20COUNT%20%23%20store%20COUNT%20in%20address%20COUNT%0Asubt%20COUNT%20COUNT%20ONE%0Ajz%20COUNT%202%0A%0Areadm%200%0Areadm%201%0Areadm%202%0Areadm%203%0Areadm%204%0A%0Ahalt)).
+
 
 ## Instruction Set
 The following instruction sections include the specific format that each format expects and a technical description.
@@ -19,15 +24,15 @@ mov2 Ra IMM
 MEM[IMM] <= REG[Ra]
 ```
 
-#### mov3
+#### save
 ```
-mov3 Ra Rb
+save Ra Rb
 MEM[REG[Ra]] <= REG[Rb]
 ```
 
-#### mov4
+#### set
 ```
-mov4 Ra IMM
+set Ra IMM
 REG[Ra] <= IMM
 ```
 
@@ -71,7 +76,7 @@ halts program
 ## Instruction Formats
 Here is a list of the various instruction formats that could occur.
 ```
-0011 0000 0000 0000
+0000 0000 0000 0000
 OP   Ra   Rb   Rc
 OP   Ra   IMM  IMM
 OP   --   IMM  IMM
@@ -82,7 +87,12 @@ OP   --   IMM  IMM
 
 Yes, you can use `#` to tell the compiler to ignore the rest of the line.
 
+> Are there variables?
+
+Yes, you can use `#define XX XX` to define a variable. For example, `#define A B` tells the compiler to replace all occurrences of `A` with `B`.
+
 ## Project setup
+Want to run the website locally? Just use the following commands :)
 ```
 # install the deps
 npm i
