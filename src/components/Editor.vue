@@ -15,12 +15,17 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
 @Component
 export default class Editor extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
   @Prop(Boolean) public copy!: boolean;
+  @Prop({ type: Number, required: false }) public highlightLine?: number;
+
+  public mounted() {
+    this.styleLine();
+  }
 
   public input(text: string) {
     this.$emit('input', text);
@@ -37,6 +42,33 @@ export default class Editor extends Vue {
     if (this.copy) {
       this.$emit('copy', e);
     }
+  }
+
+  @Watch('highlightLine')
+  public styleLine() {
+    if (this.highlightLine === undefined) {
+      return;
+    }
+
+    const lines = this.value.split('\n');
+
+    // calculate start/end
+    let startPos = 0;
+    for (let x = 0; x < lines.length; x++) {
+        if (x === this.highlightLine) {
+          break;
+        }
+        startPos += (lines[x].length + 1);
+    }
+
+    const endPos = lines[this.highlightLine].length + startPos;
+
+    const el = this.$el as HTMLElement;
+    const textArea = Array.from(el.getElementsByTagName('textarea'))[0];
+
+    textArea.focus();
+    textArea.selectionStart = startPos;
+    textArea.selectionEnd = endPos;
   }
 }
 </script>
