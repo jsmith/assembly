@@ -3,7 +3,6 @@
     <div class="toolbar">
       <icon 
         tooltip="Compile To Binary"
-        top
         icon="build"
         @click="$emit('compile')"
         style="margin-left: -18px"
@@ -11,21 +10,18 @@
       ></icon>
       <icon 
         tooltip="Start Debugging"
-        top
         icon="bug_report"
         @click="$emit('debug')"
         :disabled="debugging"
       ></icon>
       <icon 
         tooltip="Stop Debugging"
-        top
         icon="stop"
         @click="stop"
         :disabled="!debugging"
       ></icon>
       <icon 
         tooltip="Next Line"
-        top
         :disabled="!debugging" 
         icon="arrow_forward"
         @click="nextLine"

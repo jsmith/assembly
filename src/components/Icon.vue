@@ -8,7 +8,9 @@
   >
     <template slot="activator">
       <v-btn icon v-bind="$attrs" v-on="$listeners" class="button">
-        <v-icon>{{ icon }}</v-icon>
+        <v-icon
+          color="#003da7"
+        >{{ icon }}</v-icon>
       </v-btn>
     </template>
 
@@ -25,7 +27,7 @@ export default class Icon extends Vue {
   @Prop({ type: String, required: true }) public icon!: string;
   @Prop({ type: Boolean, default: false }) public right!: boolean;
   @Prop({ type: Boolean, default: false }) public left!: boolean;
-  @Prop({ type: Boolean, default: false }) public top!: boolean;
+  @Prop({ type: Boolean, default: true }) public top!: boolean;
   @Prop({ type: Boolean, default: false }) public bottom!: boolean;
 }
 </script>
