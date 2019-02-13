@@ -1,8 +1,19 @@
-export const REG: number[] = Array(2 ** 4).fill(0);
-export const MEM: number[] = Array(2 ** 8).fill(0);
-export const OUT: number[] = [];
-export const TIME = 0;
-export let COUNTER = 0;
+export interface ProgramData {
+  registers: number[];
+  memory: number[];
+  counter: number;
+  time: number;
+  out: number[];
+}
+
+const reset = () => ({
+  registers: Array(2 ** 4).fill(0),
+  memory: Array(2 ** 8).fill(0),
+  counter: 0,
+  time: 0,
+  out: [],
+});
+export let programData: ProgramData = reset();
 
 const INSTRUCTIONS = {
   mov1: 'mov1', // RF[rn] <= mem[direct]
@@ -20,6 +31,7 @@ const INSTRUCTIONS = {
 };
 
 type InstructionArgs = number[];
+export interface SourceMap { [k: number]: number; }
 type InstructionEval = (...args: InstructionArgs) => boolean | void;
 export interface Instruction {
   args: InstructionArgs;
@@ -55,32 +67,32 @@ const makeRegex = (data: ParsingData) => {
 };
 
 const mov1 = (r1: number, direct: number) => {
-  REG[r1] = MEM[direct];
+  programData.registers[r1] = programData.memory[direct];
 };
 
 const mov2 = (r1: number, direct: number) => {
-  MEM[direct] = REG[r1];
+  programData.memory[direct] = programData.registers[r1];
 };
 
 const mov3 = (r1: number, r2: number) => {
-  MEM[REG[r1]] = REG[r2];
+  programData.memory[programData.registers[r1]] = programData.registers[r2];
 };
 
 const mov4 = (r1: number, imm: number) => {
-  MEM[r1] = imm;
+  programData.registers[r1] = imm;
 };
 
 const add = (r1: number, r2: number, r3: number) => {
-  REG[r1] = REG[r2] + REG[r3];
+  programData.registers[r1] = programData.registers[r2] + programData.registers[r3];
 };
 
 const subt = (r1: number, r2: number, r3: number) => {
-  REG[r1] = REG[r2] - REG[r3];
+  programData.registers[r1] = programData.registers[r2] - programData.registers[r3];
 };
 
 const jz = (r1: number, imm: number) => {
-  if (REG[r1] !== 0) {
-    COUNTER = imm;
+  if (programData.registers[r1] !== 0) {
+    programData.counter = imm;
   }
 };
 
@@ -89,15 +101,15 @@ const halt = () => {
 };
 
 const mul = (r1: number, r2: number, r3: number) => {
-  REG[r1] = REG[r2] * REG[r3];
+  programData.registers[r1] = programData.registers[r2] * programData.registers[r3];
 };
 
 const load = (r1: number, r2: number) => {
-  REG[r1] = MEM[REG[r2]];
+  programData.registers[r1] = programData.memory[programData.registers[r2]];
 };
 
 const readm = (imm: number) => {
-  OUT[TIME] = imm;
+  programData.out[programData.time] = imm;
 };
 
 const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionEval] } = {
@@ -150,27 +162,28 @@ const VARIABLES: { [name: string]: string } = {};
  * @returns The parsed instruction or null if the line is empty.
  */
 export const parseLine = (line: string): Instruction | null => {
-  // Ignore comments and trip all whitespace
-  // Make sure to trim after splitting
   line = line.trim();
 
+  // Check for a #define statement first
   const defineMatch = line.match(DEFINE);
   if (defineMatch) {
     VARIABLES[defineMatch[1]] = defineMatch[2];
     return null;
   }
 
+  // Ignore comments and trip all whitespace
+  // Make sure to trim after splitting
   line = line.split('#')[0].trim();
   if (!line) {
     return null;
   }
 
   for (const k of Object.keys(VARIABLES)) {
+    // Replace all instances of k with VARIABLES[k]
     line = line.split(k).join(VARIABLES[k]);
   }
 
   let match = line.match(COMMAND);
-
   if (!match) {
     throw Error(`Unable to parse instruction name for line: ${line}`);
   }
@@ -189,7 +202,7 @@ export const parseLine = (line: string): Instruction | null => {
     throw Error(`Invalid instruction number: ${instructionNumber}`);
   }
 
-  // shift to most significant
+  // shift to most significant 4 bits
   let decimal = INSTRUCTION_NUMBERS[key] << 12;
 
   const patterns = PATTERNS[key];
@@ -204,17 +217,20 @@ export const parseLine = (line: string): Instruction | null => {
     throw Error(`Unable to parse arguments for "${instruction}": "${line}"`);
   }
 
+  // The first index is the whole regex match, which we don't want
   const numbers = match.slice(1).map((value) => parseInt(value, 10));
+
   for (const i of range(registers)) {
-    // Each register is 1 Byte (that's why we use 16)
+    // Each register is 4 bits (that's why we use 4)
     // We want the ->
-    // 1st register to go in the second Byte (second MSB)
-    // 2nd register to go in the third Byte (second LSB)
-    // 3rd register to go in the fourth Byte (LSB)
+    // 1st register to go in bits 11, 10, 9, 8
+    // 2nd register to go in bits 7, 6, 5, 4
+    // 3rd register to go in bits 3, 2, 1, 0
     decimal += numbers[i] << (4 * (2 - i));
   }
 
   if (immediate) {
+    // Stick the immediate value in the least significant bits
     decimal += numbers[numbers.length - 1];
   }
 
@@ -232,5 +248,42 @@ export const parseLine = (line: string): Instruction | null => {
 };
 
 export const parse = (text: string) => {
-  return text.split('\n').map(parseLine).filter((line) => line) as Instruction[];
+  const instructions: Instruction[] = [];
+  const sourceMap: SourceMap = {};
+  text.split('\n').map(parseLine).forEach((line, i) => {
+    if (line) {
+      sourceMap[instructions.length] = i;
+      instructions.push(line);
+    }
+  });
+
+  return {
+    instructions,
+    sourceMap,
+  };
 };
+
+export function* debug(instructions: Instruction[]) {
+  // RESET the attributes or programData
+  Object.assign(programData, reset());
+
+  while (true) {
+    yield;
+
+    if (programData.counter >= instructions.length) {
+      break;
+    }
+
+
+    const instruction = instructions[programData.counter];
+    programData.time++;
+    programData.counter++;
+
+    const { evaluate, args } = instruction;
+
+    const done = evaluate(...args);
+    if (done) {
+      break;
+    }
+  }
+}
