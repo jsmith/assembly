@@ -1,5 +1,12 @@
 <template>
   <div id="app" style="display: flex; flex-direction: column">
+    <a 
+      href="https://github.com/jsmith/assembly" 
+      target="__blank"
+      class="github"
+    >
+      GitHub
+    </a>
     <div class="banner">JACOBS TEXT MAGIC</div>
     <div class="row grow">
       <editor 
@@ -176,6 +183,14 @@ export default class Main extends Vue {
   display: flex
   flex-direction: column
   margin: 10px
+
+.github
+  position: absolute
+  right: 20px
+  top: 10px
+  color: #bfd6ff
+  border-bottom: #6099ff 1px solid
+  text-decoration: none
 
 .dragger-wrapper
   position: relative
