@@ -5,6 +5,9 @@ A simple assembly language built for ECE3242 (Computer Architecture). We often h
 Visit the [website](https://jacobsmith.me/assembly) and start typing. Use `Ctrl+S` to convert from assembly -> binary.
 
 ## Examples
+#### Simple Addition
+Initialize a register and double the value [[link](https://jacobsmith.me/assembly/#/?text=set%20R1%201%0Aadd%20R1%20R1%20R1%0Ahalt)].
+
 #### Looping
 Here is a simple for loop that counts down from 10 to 1 and stop looping at 0 ([link](https://jacobsmith.me/assembly/#/?text=%23define%20ONE%20R0%0A%23define%20COUNT%20R1%0Aset%20ONE%201%0Aset%20COUNT%2010%0A%0Asave%20COUNT%20COUNT%20%23%20store%20COUNT%20in%20address%20COUNT%0Asubt%20COUNT%20COUNT%20ONE%0Ajz%20COUNT%202%0A%0Areadm%200%0Areadm%201%0Areadm%202%0Areadm%203%0Areadm%204%0A%0Ahalt)).
 
