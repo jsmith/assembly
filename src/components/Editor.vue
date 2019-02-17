@@ -1,23 +1,33 @@
 <template>
   <div class="editor">
-    <v-textarea 
+    <div class="backdrop" ref="backdrop">
+      <div class="highlights" v-html="html"></div>
+    </div>
+    <textarea 
       class="textarea"
       :value="value"
-      ref="input"
+      ref="textarea"
       @input="input"
       @keydown="keydown"
       v-bind="$attrs"
       no-resize
-      :append-icon="share ? 'share' : undefined"
-      @click:append="appendCb"
-    ></v-textarea>
+      @scroll="handleScroll"
+    ></textarea>
+    <icon 
+      v-if="share"
+      @click="appendCb"
+      class="icon"
+      :icon="'share'"
+      tooltip="Copy URL"
+    ></icon>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import Icon from '@/components/Icon.vue';
 
-@Component
+@Component({ components: { Icon } })
 export default class Editor extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
   @Prop(Boolean) public share!: boolean;
@@ -26,12 +36,34 @@ export default class Editor extends Vue {
   // We need to improve our solution ^^^
   @Prop({ type: Number, required: false }) public highlightLine?: number;
 
-  public mounted() {
-    this.styleLine();
+  public $refs!: {
+    textarea: HTMLTextAreaElement;
+    backdrop: HTMLElement;
+  };
+
+  get lines() {
+    return this.value.split('\n');
   }
 
-  public input(text: string) {
-    this.$emit('input', text);
+  get html() {
+    let html: string;
+    if (this.highlightLine === undefined) {
+      html = this.value;
+    } else {
+      const before = this.lines.slice(0, this.highlightLine);
+      const after = this.lines.slice(this.highlightLine + 1);
+      html = [
+        ...before,
+        `<mark>${this.lines[this.highlightLine]}</mark>`,
+        ...after,
+      ].join('\n');
+    }
+
+    return html;
+  }
+
+  public input(e: { target: HTMLTextAreaElement }) {
+    this.$emit('input', e.target.value);
   }
 
   public keydown(e: KeyboardEvent) {
@@ -47,31 +79,9 @@ export default class Editor extends Vue {
     }
   }
 
-  @Watch('highlightLine')
-  public styleLine() {
-    if (this.highlightLine === undefined) {
-      return;
-    }
-
-    const lines = this.value.split('\n');
-
-    // calculate start/end
-    let startPos = 0;
-    for (let x = 0; x < lines.length; x++) {
-        if (x === this.highlightLine) {
-          break;
-        }
-        startPos += (lines[x].length + 1);
-    }
-
-    const endPos = lines[this.highlightLine].length + startPos;
-
-    const el = this.$el as HTMLElement;
-    const textArea = Array.from(el.getElementsByTagName('textarea'))[0];
-
-    textArea.focus();
-    textArea.selectionStart = startPos;
-    textArea.selectionEnd = endPos;
+  public handleScroll() {
+    this.$refs.backdrop.scrollTop = this.$refs.textarea.scrollTop;
+    this.$refs.backdrop.scrollLeft = this.$refs.textarea.scrollLeft;
   }
 }
 </script>
@@ -80,22 +90,59 @@ export default class Editor extends Vue {
 .editor
   position: relative
 
+.backdrop, textarea
+  padding: 5px
+
+.backdrop
+  position: absolute
+  z-index: 1
+  border: 2px solid #685972
+  background-color: #fff
+  overflow: auto
+  pointer-events: none
+  transition: transform 1s
+  height: 100%
+  width: 100%
+
+textarea
+  display: block
+  position: absolute
+  z-index: 2
+  margin: 0
+  border: 2px solid #74637f
+  border-radius: 0
+  color: #444
+  background-color: transparent
+  overflow: auto
+  resize: none
+  transition: transform 1s
+
+textarea:focus
+  outline: none
+  box-shadow: 0 0 0 2px #c6aada
+
+.highlights
+	white-space: pre-wrap
+	word-wrap: break-word
+	color: transparent
+
+.highlights /deep/ mark
+  border-radius: 3px
+  color: transparent
+  background-color: #b1d5e5
+
+.icon
+  position: absolute
+  right: 0
+  top: 0
+  z-index: 4
+
 // Use absolute so the textarea doesn't jump
 // https://stackoverflow.com/questions/15475010/text-area-in-html-jumps-on-focus
 .textarea
-  border-radius: 10px
   border: none
   top: 0
   bottom: 0
   width: 100%
   position: absolute
-
-  & /deep/ .v-input__control, /deep/ .v-input__slot, /deep/ .v-text-field__slot
-    height: 100%
-
-  & /deep/ textarea
-    margin: 0
-
-  & /deep/ .v-input__slot
-    margin: 0
 </style>

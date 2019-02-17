@@ -54,6 +54,10 @@ import Debugger from '@/components/Debugger.vue';
 import { parse, debug, SourceMap, programData } from '@/parser';
 import { DragElement } from '@/draggable';
 
+// TODO look into this https://jsfiddle.net/sasivarunan/06dqb1rg/
+// Plus look into saving in localStorage
+// Maybe you want to make a saving mechanism
+
 @Component({ components: { Editor, Debugger, DragElement } })
 export default class Main extends Vue {
   public input = '';

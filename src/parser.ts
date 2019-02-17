@@ -91,7 +91,7 @@ const subt = (r1: number, r2: number, r3: number) => {
 };
 
 const jz = (r1: number, imm: number) => {
-  if (programData.registers[r1] !== 0) {
+  if (programData.registers[r1] === 0) {
     programData.counter = imm;
   }
 };
