@@ -52,6 +52,7 @@ const range = (n: number): number[] => {
 
 const VAR = '([a-zA-Z0-9_]+)';
 const DEFINE  = `^#define +${VAR} +${VAR}$`;
+const LABEL  = `^${VAR}:$`;
 
 const makeRegex = (data: ParsingData) => {
   const regex: string[] = [];
@@ -155,6 +156,7 @@ const toHex = (decimal: number, length: number) => {
 
 
 interface Variables { [name: string]: string; }
+interface Labels { [label: string]: number; }
 
 /**
  * Parse the instruction. An error will be thrown for any detected errors in the line.
@@ -162,7 +164,12 @@ interface Variables { [name: string]: string; }
  * @param line The line of text to parse.
  * @returns The parsed instruction or null if the line is empty.
  */
-export const parseLine = (line: string, variables: Variables = {}): Instruction | null => {
+export const parseLine = (
+  line: string,
+  variables: Variables = {},
+  labels: Labels = {},
+  instructionIndex: number | null = null,
+): Instruction | null => {
   line = line.trim();
 
   // Check for a #define statement first
@@ -171,6 +178,17 @@ export const parseLine = (line: string, variables: Variables = {}): Instruction 
     variables[defineMatch[1]] = defineMatch[2];
     return null;
   }
+
+  const labelMatch = line.match(LABEL);
+  if (labelMatch) {
+    if (instructionIndex === null) {
+      throw Error('Please provide the instruction index if you define a label');
+    }
+
+    labels[labelMatch[1]] = instructionIndex;
+    return null;
+  }
+
 
   // Ignore comments and trip all whitespace
   // Make sure to trim after splitting
@@ -182,6 +200,11 @@ export const parseLine = (line: string, variables: Variables = {}): Instruction 
   for (const k of Object.keys(variables)) {
     // FYI \\b matches word boundary (but doesn't actually match any characters)
     line = line.replace(new RegExp(`\\b${k}\\b`, 'g'), variables[k]);
+  }
+
+  for (const label of Object.keys(labels)) {
+    // FYI \\b matches word boundary (but doesn't actually match any characters)
+    line = line.replace(new RegExp(`\\b${label}\\b`, 'g'), labels[label].toString());
   }
 
   let match = line.match(COMMAND);
@@ -252,8 +275,11 @@ export const parse = (text: string) => {
   const instructions: Instruction[] = [];
   const sourceMap: SourceMap = {};
   const variables = {};
+  const labels = {};
 
-  text.split('\n').map((line) => parseLine(line, variables)).forEach((line, i) => {
+  text.split('\n').forEach((textLine, i) => {
+    const line = parseLine(textLine, variables, labels, instructions.length);
+
     if (line) {
       sourceMap[instructions.length] = i;
       instructions.push(line);
