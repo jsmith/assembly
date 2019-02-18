@@ -109,7 +109,7 @@ const load = (r1: number, r2: number) => {
 };
 
 const readm = (imm: number) => {
-  programData.out[programData.time] = imm;
+  programData.out[programData.time] = programData.memory[imm];
 };
 
 const PATTERNS: { [key in keyof typeof INSTRUCTIONS]: [ParsingData, InstructionEval] } = {

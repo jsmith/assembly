@@ -8,6 +8,9 @@ Visit the [website](https://jacobsmith.me/assembly) and start typing. Use `Ctrl+
 #### Simple Addition
 Initialize a register and double the value [[link](https://jacobsmith.me/assembly/#/?text=set%20R1%201%0Aadd%20R1%20R1%20R1%0Ahalt)].
 
+#### Using Memory
+Store a value to memory and read it in the debug line [[link](http://jacobsmith.me/assembly/#/?text=set%20R1%2055%0Amov2%20R1%200%0Areadm%200%0Ahalt)].
+
 #### Looping
 Here is a simple for loop that counts down from 10 to 1 and stop looping at 0 [[link](https://jacobsmith.me/assembly/#/?text=%23define%20ONE%20R0%0A%23define%20COUNT%20R1%0A%23define%20TEMP%20R2%0Aset%20ONE%201%0Aset%20COUNT%2010%0A%0Asave%20COUNT%20COUNT%20%23%20store%20COUNT%20in%20address%20COUNT%0Asubt%20COUNT%20COUNT%20ONE%0A%0A%23%20Since%20our%20only%20instruction%20for%20control%20flow%20is%20jz,%20it%27s%20very%20awkward%20to%20break%20out%20of%20loops%0Amov1%20TEMP%201%20%23%20TEMP%20%3D%20MEM%5B1%5D%0Ajz%20TEMP%202%0A%0Areadm%201%0Areadm%202%0Areadm%203%0Areadm%204%0Areadm%205%0Areadm%206%0Areadm%207%0Areadm%208%0Areadm%209%0Areadm%2010%0A%0Ahalt)].
 
