@@ -14,6 +14,9 @@ Store a value to memory and read it in the debug line [[link](http://jacobsmith.
 #### Looping
 Here is a simple for loop that counts down from 10 to 1 and stop looping at 0 [[link](https://jacobsmith.me/assembly/#/?text=%23define%20ONE%20R0%0A%23define%20COUNT%20R1%0A%23define%20TEMP%20R2%0Aset%20ONE%201%0Aset%20COUNT%2010%0A%0Asave%20COUNT%20COUNT%20%23%20store%20COUNT%20in%20address%20COUNT%0Asubt%20COUNT%20COUNT%20ONE%0A%0A%23%20Since%20our%20only%20instruction%20for%20control%20flow%20is%20jz,%20it%27s%20very%20awkward%20to%20break%20out%20of%20loops%0Amov1%20TEMP%201%20%23%20TEMP%20%3D%20MEM%5B1%5D%0Ajz%20TEMP%202%0A%0Areadm%201%0Areadm%202%0Areadm%203%0Areadm%204%0Areadm%205%0Areadm%206%0Areadm%207%0Areadm%208%0Areadm%209%0Areadm%2010%0A%0Ahalt)].
 
+#### Labels
+A loop that never ends, using a label [[link](https://jacobsmith.me/assembly/#/?text=%23%20dummy%20instruction%0Aadd%20R1%20R1%20R1%0A%0Aloop%3A%0A%20%20%20%20jz%20R1%20loop%0A)].
+
 
 ## Instruction Set
 The following instruction sections include the specific format that each format expects and a technical description.
@@ -92,6 +95,10 @@ OP   --   IMM  IMM
 > Are there comments?
 
 Yes, you can use `#` to tell the compiler to ignore the rest of the line.
+
+> Are there labels?
+
+Yes, you can use `<LABEL>:` to tell the compiler to attach `<LABEL>` to the following line number.
 
 > Are there variables?
 
