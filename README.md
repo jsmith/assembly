@@ -38,12 +38,14 @@ MEM[IMM] <= REG[Ra]
 save Ra Rb
 MEM[REG[Ra]] <= REG[Rb]
 ```
+> Previously `mov3`
 
 #### set
 ```
 set Ra IMM
 REG[Ra] <= IMM
 ```
+> Previously `mov4`
 
 #### load
 ```
@@ -56,12 +58,14 @@ REG[Ra] <= MEM[REG[Rb]]
 add Ra Rb Rc
 REG[Ra] <= REG[Rb] + REG[Rc]
 ```
+> Previously there were only two registers (`add Ra Rb`)
 
 #### subt
 ```
 subt Ra Rb Rc
 REG[Ra] <= REG[Rb] - REG[Rc]
 ```
+> Previously there were only two registers (`subt Ra Rb`)
 
 #### jz
 ```
