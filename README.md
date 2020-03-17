@@ -1,5 +1,5 @@
 # Jacob's Text Magic
-A simple assembly language built for ECE3242 (Computer Architecture). We often had to write and insert binary into memory manually (see [here](https://github.com/jsmith/set-associative-cache/commit/880d9868ce18cff4e11e5c2b4c03660739c4faa4#diff-6be5ac8b4479b3a22d07d63bb0338fe9)). Furthermore, compilation and simulation took upwards of 10 minutes. By creating this program, I was able to write the program in assembly, simulate the behavior using the builtin emulator, and compile the program to the expected binary format.
+A simple assembly language built for ECE3242 (Computer Architecture). We often had to write and insert binary into memory manually (see [here](https://github.com/jsmith/set-associative-cache/blob/880d9868ce18cff4e11e5c2b4c03660739c4faa4/memory.vhd#L37)). Furthermore, compilation and simulation took upwards of 10 minutes. By creating this program, I was able to write the program in assembly, simulate the behavior using the builtin emulator, and compile the program to the expected binary format.
 
 ## Usage
 Visit the [website](https://jacobsmith.me/assembly) and start typing. Use `Ctrl+S` to convert from assembly -> binary.
